@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useActionState } from 'react';
+import { useEffect } from 'react';
+import { useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { AlarmClock, Bot, BrainCircuit, AlertTriangle, Loader2 } from 'lucide-react';
 import { handleSetAlarm, type FormState } from '@/app/actions';
@@ -14,6 +15,7 @@ import { Badge } from '../ui/badge';
 interface AlarmFormProps {
   currentHeartRate: number;
   historicalHeartRates: number[];
+  onAlarmSet: () => void;
 }
 
 const initialState: FormState = {
@@ -40,7 +42,7 @@ function SubmitButton() {
   );
 }
 
-export function AlarmForm({ currentHeartRate, historicalHeartRates }: AlarmFormProps) {
+export function AlarmForm({ currentHeartRate, historicalHeartRates, onAlarmSet }: AlarmFormProps) {
   const [state, formAction] = useActionState(handleSetAlarm, initialState);
   const { toast } = useToast();
 
@@ -51,8 +53,11 @@ export function AlarmForm({ currentHeartRate, historicalHeartRates }: AlarmFormP
         description: state.message,
         variant: state.isError ? 'destructive' : 'default',
       });
+      if (!state.isError) {
+        onAlarmSet();
+      }
     }
-  }, [state, toast]);
+  }, [state, toast, onAlarmSet]);
   
   const severityMap = {
     low: { variant: "secondary", label: "Low" },

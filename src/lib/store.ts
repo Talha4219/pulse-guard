@@ -10,19 +10,21 @@ interface Alarm {
 // In-memory store. In a real-world scenario, you would use a database.
 // This is not safe for concurrent requests or multiple server instances, but fine for this demo.
 let store = {
-  latestVitals: { heartRate: 75, pulse: 98 } as Vitals,
+  latestVitals: { heartRate: 0, pulse: 0 } as Vitals,
   alarm: { time: '07:00' } as Alarm,
-  historicalHeartRates: [72, 74, 75, 73, 76, 75, 77, 76, 75, 74, 78, 79],
+  historicalHeartRates: [],
 };
 
 export const getLatestVitals = () => store.latestVitals;
 export const getHistoricalHeartRates = () => store.historicalHeartRates;
 export const updateVitals = (data: Vitals) => {
   store.latestVitals = data;
-  store.historicalHeartRates.push(data.heartRate);
-  // Keep the last 50 readings
-  if (store.historicalHeartRates.length > 50) {
-    store.historicalHeartRates.shift();
+  if (data.heartRate) {
+    store.historicalHeartRates.push(data.heartRate);
+    // Keep the last 50 readings
+    if (store.historicalHeartRates.length > 50) {
+      store.historicalHeartRates.shift();
+    }
   }
 };
 

@@ -43,14 +43,11 @@ export async function handleSetAlarm(prevState: FormState, formData: FormData): 
       alarmTime,
     });
 
-    console.log(`SIMULATING: Sending alarm time ${aiResponse.alarmTime} to ESP32.`);
+    console.log(`Setting alarm time ${aiResponse.alarmTime} on the server.`);
     
-    // In a real app, you would have the base URL in environment variables.
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002';
-
-    // This fetch call simulates the app server telling the ESP32 the new alarm time.
-    // The ESP32 would need to poll an endpoint like this to get its configuration.
-    await fetch(new URL('/api/alarm', baseUrl), {
+    // This fetch call tells the server to store the new alarm time.
+    // The web app will then poll this to trigger the on-screen alarm.
+    await fetch(new URL('/api/alarm', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ time: aiResponse.alarmTime }),
