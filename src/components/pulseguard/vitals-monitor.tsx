@@ -1,4 +1,6 @@
-import { HeartPulse, Waves } from 'lucide-react';
+'use client';
+
+import { HeartPulse, Waves, Droplets, Gauge } from 'lucide-react';
 import { DataCard } from './data-card';
 
 interface VitalsMonitorProps {
@@ -10,7 +12,7 @@ export function VitalsMonitor({ heartRate, spo2 }: VitalsMonitorProps) {
   return (
     <div className="space-y-6">
        <h2 className="text-2xl font-bold tracking-tight">Live Vitals</h2>
-       <div className="grid gap-6 sm:grid-cols-2">
+       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
         <DataCard
           title="Heart Rate"
           value={heartRate}
@@ -24,6 +26,20 @@ export function VitalsMonitor({ heartRate, spo2 }: VitalsMonitorProps) {
           unit="SpO2 %"
           icon={Waves}
           description="Blood oxygen level."
+        />
+        <DataCard
+          title="Blood Sugar"
+          value={null}
+          unit="mg/dL"
+          icon={Droplets}
+          description="Coming soon."
+        />
+        <DataCard
+          title="Blood Pressure"
+          value={null}
+          unit="mmHg"
+          icon={Gauge}
+          description="Coming soon."
         />
       </div>
     </div>

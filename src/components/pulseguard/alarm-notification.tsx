@@ -23,14 +23,14 @@ export function AlarmNotification({ isOpen, onStop }: AlarmNotificationProps) {
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <BellRing className="h-6 w-6 animate-swing" />
-            Wake Up!
+            Time for your medicine!
           </AlertDialogTitle>
           <AlertDialogDescription>
-            Your alarm is ringing. Time to start your day!
+            This is your reminder to take your scheduled medication.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogAction onClick={onStop}>Stop Alarm</AlertDialogAction>
+          <AlertDialogAction onClick={onStop}>Dismiss</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

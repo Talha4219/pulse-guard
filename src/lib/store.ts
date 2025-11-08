@@ -4,14 +4,17 @@ interface Vitals {
 }
 
 interface Alarm {
-  time: string;
+  time: string | null;
 }
+
+type AlarmStatus = 'idle' | 'ringing';
 
 // In-memory store. In a real-world scenario, you would use a database.
 // This is not safe for concurrent requests or multiple server instances, but fine for this demo.
 let store = {
   latestVitals: { heartRate: 0, pulse: 0 } as Vitals,
-  alarm: { time: '07:00' } as Alarm,
+  alarm: { time: null } as Alarm,
+  alarmStatus: 'idle' as AlarmStatus,
   historicalHeartRates: [],
 };
 
@@ -32,3 +35,8 @@ export const getAlarm = () => store.alarm;
 export const setAlarm = (data: Alarm) => {
   store.alarm = data;
 };
+
+export const getAlarmStatus = () => store.alarmStatus;
+export const setAlarmStatus = (status: AlarmStatus) => {
+  store.alarmStatus = status;
+}

@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'PulseGuard',
-  description: 'Monitor your vitals and set intelligent alarms.',
+  title: 'PillPulse',
+  description: 'Your smart medicine reminder.',
 };
 
 export default function RootLayout({

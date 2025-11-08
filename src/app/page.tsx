@@ -5,34 +5,106 @@ import { Header } from '@/components/pulseguard/header';
 import { VitalsMonitor } from '@/components/pulseguard/vitals-monitor';
 import { AlarmForm } from '@/components/pulseguard/alarm-form';
 import { AlarmNotification } from '@/components/pulseguard/alarm-notification';
+import { HealthAdvisor } from '@/components/pulseguard/health-advisor';
+
+// This type definition is now local as the AI flow is removed.
+export interface HealthSuggestionOutput {
+  overallStatus: 'normal' | 'elevated' | 'low' | 'critical' | 'no_data';
+  precautions: string[];
+  possibleDiseases: string[];
+}
+
+// Simple rule-based function to generate health suggestions
+const getLocalHealthSuggestions = (vitals: { heartRate: number; spo2: number }): HealthSuggestionOutput | null => {
+    const { heartRate, spo2 } = vitals;
+
+    if (heartRate === 0 || spo2 === 0) {
+        return null;
+    }
+
+    let overallStatus: HealthSuggestionOutput['overallStatus'] = 'normal';
+    let precautions: string[] = [];
+    let possibleDiseases: string[] = [];
+
+    // Heart Rate Logic
+    if (heartRate > 130) {
+        overallStatus = 'critical';
+        precautions.push('Your heart rate is very high. Please rest and seek medical attention if it does not come down.');
+        possibleDiseases.push('Severe tachycardia');
+    } else if (heartRate > 100) {
+        overallStatus = 'elevated';
+        precautions.push('Your heart rate is elevated. Try some deep breathing exercises and reduce caffeine intake.');
+        possibleDiseases.push('Tachycardia, possibly from stress or exertion.');
+    } else if (heartRate < 50) {
+        overallStatus = 'critical';
+        precautions.push('Your heart rate is very low. If you feel faint or dizzy, seek medical help immediately.');
+        possibleDiseases.push('Severe bradycardia');
+    } else if (heartRate < 60) {
+        overallStatus = 'low';
+        precautions.push('Your heart rate is lower than average. Monitor for symptoms like dizziness.');
+        possibleDiseases.push('Bradycardia');
+    }
+
+    // SpO2 Logic
+    if (spo2 < 90) {
+        overallStatus = 'critical';
+        precautions.push('Your oxygen level is critically low. Seek emergency medical attention.');
+        possibleDiseases.push('Severe hypoxemia');
+    } else if (spo2 < 95) {
+        if(overallStatus !== 'critical') overallStatus = 'low';
+        precautions.push('Your oxygen level is slightly low. Ensure good ventilation and try to sit upright.');
+        possibleDiseases.push('Mild hypoxemia');
+    }
+
+    if (overallStatus === 'normal') {
+        precautions.push('Your vitals are in a normal range. Keep up the healthy habits!');
+        possibleDiseases.push('No immediate concerns based on this data.');
+    }
+    
+    possibleDiseases.push('This is not a medical diagnosis. Consult a healthcare professional.');
+
+
+    return {
+        overallStatus,
+        precautions,
+        possibleDiseases,
+    };
+};
+
 
 export default function Home() {
   const [vitals, setVitals] = useState({ heartRate: 0, spo2: 0 });
   const [historicalHeartRates, setHistoricalHeartRates] = useState<number[]>([]);
   const [alarmTime, setAlarmTime] = useState<string | null>(null);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
+  const [healthSuggestions, setHealthSuggestions] = useState<HealthSuggestionOutput | null>(null);
 
-  // Fetch vitals from the API
-  useEffect(() => {
-    const fetchVitals = async () => {
-      try {
-        const response = await fetch('/api/vitals');
-        if (response.ok) {
-          const data = await response.json();
-          setVitals({ heartRate: data.heartRate || 0, spo2: data.pulse || 0 });
-        } else {
-          // If the API call fails, default to 0
-          setVitals({ heartRate: 0, spo2: 0 });
-        }
-      } catch (error) {
-        console.error('Failed to fetch vitals:', error);
-        setVitals({ heartRate: 0, spo2: 0 });
+  // Fetch vitals from the server
+  const fetchVitals = useCallback(async () => {
+    try {
+      const response = await fetch('/api/vitals');
+      if (response.ok) {
+        const data = await response.json();
+        // The store uses 'pulse' for spo2
+        setVitals({ heartRate: data.heartRate, spo2: data.pulse });
       }
-    };
-
-    const vitalsInterval = setInterval(fetchVitals, 2500); // Poll every 2.5 seconds
-    return () => clearInterval(vitalsInterval);
+    } catch (error) {
+      console.error('Failed to fetch vitals:', error);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchVitals(); // Fetch on initial load
+    const vitalsInterval = setInterval(fetchVitals, 2000); // Poll for new vitals every 2 seconds
+    return () => clearInterval(vitalsInterval);
+  }, [fetchVitals]);
+
+
+  // Generate Health Suggestions locally
+  useEffect(() => {
+    const suggestions = getLocalHealthSuggestions(vitals);
+    setHealthSuggestions(suggestions);
+  }, [vitals]);
 
   // Fetch the alarm time from the server
   const fetchAlarm = useCallback(async () => {
@@ -40,9 +112,7 @@ export default function Home() {
       const response = await fetch('/api/alarm');
       if (response.ok) {
         const data = await response.json();
-        if (data.time) {
-          setAlarmTime(data.time);
-        }
+        setAlarmTime(data.time || null);
       }
     } catch (error) {
       console.error('Failed to fetch alarm:', error);
@@ -72,22 +142,23 @@ export default function Home() {
     return () => clearInterval(alarmCheckInterval);
   }, [alarmTime, isAlarmRinging]);
   
-  // Trigger beeping API when alarm is ringing
+  // Set alarm status to "ringing" when the alarm starts
   useEffect(() => {
     if (!isAlarmRinging) return;
 
-    const triggerBeep = async () => {
+    const triggerAlarm = async () => {
         try {
-            await fetch('/api/alarm/trigger', { method: 'POST' });
+            await fetch('/api/alarm/trigger', { 
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status: 'ringing' })
+            });
         } catch (error) {
-            console.error('Failed to trigger alarm beep:', error);
+            console.error('Failed to trigger alarm on server:', error);
         }
     };
     
-    triggerBeep(); // Trigger immediately
-    const beepInterval = setInterval(triggerBeep, 2000); // And every 2 seconds
-
-    return () => clearInterval(beepInterval);
+    triggerAlarm();
   }, [isAlarmRinging]);
 
   // Update historical data when vitals change
@@ -104,15 +175,22 @@ export default function Home() {
     }
   }, [vitals.heartRate]);
 
-  const handleStopAlarm = () => {
+  const handleStopAlarm = async () => {
     setIsAlarmRinging(false);
-    // To prevent it from re-triggering in the same minute, we can clear the alarm time
     setAlarmTime(null); 
-    // You might want to also clear it on the server
-    fetch('/api/alarm', { 
+    
+    // Reset alarm on the server
+    await fetch('/api/alarm', { 
       method: 'POST', 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ time: null }) 
+    });
+
+    // Reset alarm trigger status on the server
+    await fetch('/api/alarm/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'idle' })
     });
   };
   
@@ -137,9 +215,12 @@ export default function Home() {
             />
           </div>
         </div>
+        <div className="mt-8">
+            <HealthAdvisor suggestions={healthSuggestions} isLoading={false} />
+        </div>
       </main>
       <footer className="py-4 text-center text-muted-foreground text-sm">
-        <p>&copy; {new Date().getFullYear()} PulseGuard. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} PillPulse. All rights reserved.</p>
       </footer>
       <AlarmNotification isOpen={isAlarmRinging} onStop={handleStopAlarm} />
     </div>
