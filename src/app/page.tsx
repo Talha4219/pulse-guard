@@ -225,8 +225,21 @@ export default function Home() {
     fetchAlarm();
   };
 
-  const handleAcknowledgeAlert = async () => {
+  const clearDiseaseAlert = async () => {
     setIsHealthAlertOpen(false);
+    try {
+      await fetch('/api/disease', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ disease: null }),
+      });
+    } catch (error) {
+      console.error('Failed to clear disease alert:', error);
+    }
+  };
+
+  const handleAcknowledgeAlert = async () => {
+    clearDiseaseAlert(); // Clear the alert first
     
     try {
       await fetch('/api/doctor/status', {
@@ -275,7 +288,7 @@ export default function Home() {
       <HealthAlertDialog
         isOpen={isHealthAlertOpen}
         diseaseName={alertedDisease}
-        onClose={() => setIsHealthAlertOpen(false)}
+        onClose={clearDiseaseAlert}
         onAcknowledge={handleAcknowledgeAlert}
       />
     </div>

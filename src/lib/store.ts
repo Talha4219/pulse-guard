@@ -55,6 +55,10 @@ export const setDoctorStatus = (status: DoctorStatus) => {
 }
 
 export const getLatestDisease = () => store.latestDisease;
-export const setLatestDisease = (data: { name: string }) => {
-  store.latestDisease = { name: data.name, timestamp: Date.now() };
+export const setLatestDisease = (data: { name: string | null }) => {
+  if (data.name) {
+    store.latestDisease = { name: data.name, timestamp: Date.now() };
+  } else {
+    store.latestDisease = { name: null, timestamp: null };
+  }
 };
