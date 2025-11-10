@@ -8,6 +8,8 @@ import { AlarmNotification } from '@/components/pulseguard/alarm-notification';
 import { HealthAdvisor } from '@/components/pulseguard/health-advisor';
 import { HealthAlertDialog } from '@/components/pulseguard/health-alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CalendarClock } from 'lucide-react';
 
 // This type definition is now local as the AI flow is removed.
 export interface HealthSuggestionOutput {
@@ -269,12 +271,28 @@ export default function Home() {
           <div className="lg:col-span-2">
             <VitalsMonitor heartRate={vitals.heartRate} spo2={vitals.spo2} />
           </div>
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-8">
             <AlarmForm
               currentHeartRate={vitals.heartRate}
               historicalHeartRates={historicalHeartRates}
               onAlarmSet={handleAlarmSet}
             />
+            {alarmTime && (
+              <Card className="shadow-md transition-shadow hover:shadow-lg">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CalendarClock className="h-6 w-6 text-primary" />
+                    Upcoming Appointment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-lg">
+                    You have an appointment with <strong>FARZAN</strong> at{' '}
+                    <span className="font-bold text-primary">{alarmTime}</span>.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
         <div className="mt-8">
@@ -294,3 +312,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
