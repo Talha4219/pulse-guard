@@ -14,19 +14,20 @@ import { BellRing } from 'lucide-react';
 interface AlarmNotificationProps {
   isOpen: boolean;
   onStop: () => void;
+  alarmTime: string | null;
 }
 
-export function AlarmNotification({ isOpen, onStop }: AlarmNotificationProps) {
+export function AlarmNotification({ isOpen, onStop, alarmTime }: AlarmNotificationProps) {
   return (
     <AlertDialog open={isOpen}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle className="flex items-center gap-2">
             <BellRing className="h-6 w-6 animate-swing" />
-            Time for your medicine!
+            Appointment Reminder
           </AlertDialogTitle>
           <AlertDialogDescription>
-            This is your reminder to take your scheduled medication.
+            You have an appointment with FARZAN at {alarmTime}.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Header } from '@/components/pulseguard/header';
 import { VitalsMonitor } from '@/components/pulseguard/vitals-monitor';
 import { AlarmForm } from '@/components/pulseguard/alarm-form';
 import { AlarmNotification } from '@/components/pulseguard/alarm-notification';
 import { HealthAdvisor } from '@/components/pulseguard/health-advisor';
+import { HealthAlertDialog } from '@/components/pulseguard/health-alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 // This type definition is now local as the AI flow is removed.
 export interface HealthSuggestionOutput {
@@ -78,6 +80,10 @@ export default function Home() {
   const [alarmTime, setAlarmTime] = useState<string | null>(null);
   const [isAlarmRinging, setIsAlarmRinging] = useState(false);
   const [healthSuggestions, setHealthSuggestions] = useState<HealthSuggestionOutput | null>(null);
+  const [isHealthAlertOpen, setIsHealthAlertOpen] = useState(false);
+  const [alertedDisease, setAlertedDisease] = useState<string | null>(null);
+  const { toast } = useToast();
+  const lastDiseaseTimestamp = useRef<number | null>(null);
 
   // Fetch vitals from the server
   const fetchVitals = useCallback(async () => {
@@ -94,7 +100,6 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    fetchVitals(); // Fetch on initial load
     const vitalsInterval = setInterval(fetchVitals, 2000); // Poll for new vitals every 2 seconds
     return () => clearInterval(vitalsInterval);
   }, [fetchVitals]);
@@ -119,11 +124,32 @@ export default function Home() {
     }
   }, []);
 
+  // Fetch for disease reports
+  const fetchDisease = useCallback(async () => {
+    try {
+      const response = await fetch('/api/disease');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.name && data.timestamp && data.timestamp !== lastDiseaseTimestamp.current) {
+          lastDiseaseTimestamp.current = data.timestamp;
+          setAlertedDisease(data.name);
+          setIsHealthAlertOpen(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch disease report:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAlarm(); // Fetch on initial load
     const alarmFetchInterval = setInterval(fetchAlarm, 5000); // And poll for changes
-    return () => clearInterval(alarmFetchInterval);
-  }, [fetchAlarm]);
+    const diseaseFetchInterval = setInterval(fetchDisease, 5000); // Poll for new disease reports
+    return () => {
+      clearInterval(alarmFetchInterval);
+      clearInterval(diseaseFetchInterval);
+    }
+  }, [fetchAlarm, fetchDisease]);
   
   // Check if alarm should be ringing
   useEffect(() => {
@@ -199,6 +225,29 @@ export default function Home() {
     fetchAlarm();
   };
 
+  const handleAcknowledgeAlert = async () => {
+    setIsHealthAlertOpen(false);
+    
+    try {
+      await fetch('/api/doctor/status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'coming' }),
+      });
+      toast({
+        title: 'Acknowledged',
+        description: 'You are on your way to assist the patient. The device has been notified.',
+      });
+    } catch (error) {
+      console.error('Failed to send acknowledgement:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not send acknowledgement. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -222,7 +271,13 @@ export default function Home() {
       <footer className="py-4 text-center text-muted-foreground text-sm">
         <p>&copy; {new Date().getFullYear()} PillPulse. All rights reserved.</p>
       </footer>
-      <AlarmNotification isOpen={isAlarmRinging} onStop={handleStopAlarm} />
+      <AlarmNotification isOpen={isAlarmRinging} onStop={handleStopAlarm} alarmTime={alarmTime} />
+      <HealthAlertDialog
+        isOpen={isHealthAlertOpen}
+        diseaseName={alertedDisease}
+        onClose={() => setIsHealthAlertOpen(false)}
+        onAcknowledge={handleAcknowledgeAlert}
+      />
     </div>
   );
 }
