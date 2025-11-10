@@ -273,8 +273,6 @@ export default function Home() {
           </div>
           <div className="lg:col-span-1 space-y-8">
             <AlarmForm
-              currentHeartRate={vitals.heartRate}
-              historicalHeartRates={historicalHeartRates}
               onAlarmSet={handleAlarmSet}
             />
             {alarmTime && (
@@ -312,5 +310,7 @@ export default function Home() {
     </div>
   );
 }
+
+    
 
     

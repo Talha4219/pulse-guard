@@ -12,8 +12,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
 interface AlarmFormProps {
-  currentHeartRate: number;
-  historicalHeartRates: number[];
   onAlarmSet: () => void;
 }
 
@@ -89,3 +87,5 @@ export function AlarmForm({ onAlarmSet }: AlarmFormProps) {
     </Card>
   );
 }
+
+    
