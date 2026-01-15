@@ -19,7 +19,7 @@ interface PendingAppointment {
     _id: string;
     patient: string;
     doctor: string;
-    time: string;
+    time?: string;
     status: 'pending';
 }
 
@@ -27,6 +27,7 @@ export function AppointmentForm({ onAppointmentCreated }: AppointmentFormProps) 
     const { toast } = useToast();
     const [pendingAppointments, setPendingAppointments] = useState<PendingAppointment[]>([]);
     const [loading, setLoading] = useState(false);
+    const [selectedTimes, setSelectedTimes] = useState<Record<string, string>>({});
 
     const fetchPending = useCallback(async () => {
         try {
@@ -49,18 +50,30 @@ export function AppointmentForm({ onAppointmentCreated }: AppointmentFormProps) 
     }, [fetchPending]);
 
     const handleApprove = async (id: string, patient: string) => {
+        const time = selectedTimes[id];
+        if (!time) {
+            toast({ title: 'Error', description: 'Please select a time for the appointment.', variant: 'destructive' });
+            return;
+        }
+
         setLoading(true);
         try {
-            // Call API to update status to scheduled
+            // Call API to update status to scheduled and set time
             const res = await fetch('/api/appointment', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, status: 'scheduled' })
+                body: JSON.stringify({ id, status: 'scheduled', time })
             });
 
             if (res.ok) {
-                toast({ title: 'Success', description: `Appointment for ${patient} confirmed and forwarded.` });
+                toast({ title: 'Success', description: `Appointment for ${patient} scheduled at ${time}.` });
                 fetchPending(); // Refresh list
+
+                // Clear time selection
+                const newTimes = { ...selectedTimes };
+                delete newTimes[id];
+                setSelectedTimes(newTimes);
+
                 if (onAppointmentCreated) onAppointmentCreated(); // Refresh main card
             } else {
                 toast({ title: 'Error', description: 'Failed to approve appointment.', variant: 'destructive' });
@@ -93,18 +106,26 @@ export function AppointmentForm({ onAppointmentCreated }: AppointmentFormProps) 
                         <CardContent className="space-y-4">
                             {pendingAppointments.map((appt) => (
                                 <div key={appt._id} className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-white/5">
-                                    <div className="text-sm">
+                                    <div className="text-sm flex-1">
                                         <p className="text-white font-medium">{appt.patient}</p>
-                                        <p className="text-white/60 text-xs">Dr. {appt.doctor} @ {appt.time}</p>
+                                        <p className="text-white/60 text-xs">Dr. {appt.doctor}</p>
                                     </div>
-                                    <Button
-                                        size="sm"
-                                        variant="glow"
-                                        disabled={loading}
-                                        onClick={() => handleApprove(appt._id, appt.patient)}
-                                    >
-                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 text-green-400" />}
-                                    </Button>
+                                    <div className="flex items-center gap-2">
+                                        <Input
+                                            type="time"
+                                            className="w-32 bg-black/20 border-white/10 h-8"
+                                            value={selectedTimes[appt._id] || ''}
+                                            onChange={(e) => setSelectedTimes({ ...selectedTimes, [appt._id]: e.target.value })}
+                                        />
+                                        <Button
+                                            size="sm"
+                                            variant="glow"
+                                            disabled={loading}
+                                            onClick={() => handleApprove(appt._id, appt.patient)}
+                                        >
+                                            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 text-green-400" />}
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                         </CardContent>
