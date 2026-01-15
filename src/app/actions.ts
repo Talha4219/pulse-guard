@@ -10,6 +10,7 @@ const appointmentSchema = z.object({
   patient: z.string().min(1, 'Patient name is required'),
   doctor: z.string().min(1, 'Doctor name is required'),
   time: z.string().regex(/^\d{2}:\d{2}$/, 'Please enter a valid time (HH:MM).'),
+  status: z.enum(['pending', 'scheduled']).default('scheduled'),
 });
 
 export interface FormState {
@@ -78,11 +79,19 @@ export async function handleCreateAppointment(prevState: FormState, formData: Fo
   const { patient, doctor, time } = validatedFields.data;
 
   try {
+    // Appointments created by the doctor/admin from UI are directly scheduled
+    // But we will hit the PUT endpoint if we are approving, 
+    // or POST if creating new. For now let's assume this action creates NEW scheduled ones.
+    // To keep it simple, we'll just post param status=scheduled to our API
     await fetch(new URL('/api/appointment', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ patient, doctor, time }),
+      body: JSON.stringify({ patient, doctor, time, status: 'scheduled' }),
     });
+
+    // Also trigger the external API mock for these "direct" creations if needed, 
+    // but the user requirement implies flow is Request -> Schedule.
+    // So let's handle the "Approve" action separately.
 
     return {
       message: `Appointment scheduled with ${doctor} at ${time}.`,

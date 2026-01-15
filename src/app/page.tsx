@@ -135,8 +135,11 @@ export default function Home() {
       const response = await fetch('/api/appointment');
       if (response.ok) {
         const data = await response.json();
-        // Check if data is not empty/null object
-        if (data && data.doctor && data.time) {
+        // The API returns an array now. Find the latest scheduled one.
+        if (Array.isArray(data)) {
+          const scheduled = data.find((a: any) => a.status === 'scheduled');
+          setAppointment(scheduled || null);
+        } else if (data && data.status === 'scheduled') {
           setAppointment(data);
         } else {
           setAppointment(null);

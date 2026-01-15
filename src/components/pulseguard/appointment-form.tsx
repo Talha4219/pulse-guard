@@ -1,139 +1,118 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useActionState } from 'react';
-import { useFormStatus } from 'react-dom';
-import { CalendarPlus, Loader2 } from 'lucide-react';
-import { handleCreateAppointment, type FormState } from '@/app/actions';
+import { CalendarPlus, Loader2, CheckCircle, Clock } from 'lucide-react';
+import { handleCreateAppointment, type FormState } from '@/app/actions'; // We might need a new action for approval
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { motion } from 'framer-motion';
-// comment of commit
+import { motion, AnimatePresence } from 'framer-motion';
+
 interface AppointmentFormProps {
     onAppointmentCreated?: () => void;
 }
 
-const initialState: FormState = {
-    message: '',
-    isError: false,
-};
-
-function SubmitButton() {
-    const { pending } = useFormStatus();
-    return (
-        <Button
-            type="submit"
-            disabled={pending}
-            className="w-full relative overflow-hidden group"
-            variant="glow"
-        >
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            {pending ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Scheduling...
-                </>
-            ) : (
-                <>
-                    <CalendarPlus className="mr-2 h-4 w-4" />
-                    Schedule Appointment
-                </>
-            )}
-        </Button>
-    );
+interface PendingAppointment {
+    _id: string;
+    patient: string;
+    doctor: string;
+    time: string;
+    status: 'pending';
 }
 
 export function AppointmentForm({ onAppointmentCreated }: AppointmentFormProps) {
-    const [state, formAction] = useActionState(handleCreateAppointment, initialState);
     const { toast } = useToast();
-    const prevStateRef = useRef<FormState>(initialState);
+    const [pendingAppointments, setPendingAppointments] = useState<PendingAppointment[]>([]);
+    const [loading, setLoading] = useState(false);
+
+    const fetchPending = useCallback(async () => {
+        try {
+            const res = await fetch('/api/appointment');
+            if (res.ok) {
+                const data = await res.json();
+                // Filter only pending
+                const pending = Array.isArray(data) ? data.filter((a: any) => a.status === 'pending') : [];
+                setPendingAppointments(pending);
+            }
+        } catch (e) {
+            console.error("Failed to fetch pending", e);
+        }
+    }, []);
 
     useEffect(() => {
-        if (state.message && state !== prevStateRef.current) {
-            toast({
-                title: state.isError ? 'Error' : 'Success',
-                description: state.message,
-                variant: state.isError ? 'destructive' : 'default',
+        fetchPending();
+        const interval = setInterval(fetchPending, 5000);
+        return () => clearInterval(interval);
+    }, [fetchPending]);
+
+    const handleApprove = async (id: string, patient: string) => {
+        setLoading(true);
+        try {
+            // Call API to update status to scheduled
+            const res = await fetch('/api/appointment', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, status: 'scheduled' })
             });
-            if (!state.isError && onAppointmentCreated) {
-                onAppointmentCreated();
+
+            if (res.ok) {
+                toast({ title: 'Success', description: `Appointment for ${patient} confirmed and forwarded.` });
+                fetchPending(); // Refresh list
+                if (onAppointmentCreated) onAppointmentCreated(); // Refresh main card
+            } else {
+                toast({ title: 'Error', description: 'Failed to approve appointment.', variant: 'destructive' });
             }
-            prevStateRef.current = state;
+        } catch (e) {
+            console.error(e);
+            toast({ title: 'Error', description: 'Something went wrong.', variant: 'destructive' });
+        } finally {
+            setLoading(false);
         }
-    }, [state, toast, onAppointmentCreated]);
+    };
 
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
+            className='space-y-4'
         >
-            <Card className="shadow-2xl border-white/10 bg-card/40 backdrop-blur-xl">
-                <form action={formAction}>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-2xl font-light">
-                            <div className="p-2 rounded-full bg-primary/20 text-primary">
-                                <CalendarPlus className="h-6 w-6" />
-                            </div>
-                            <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
-                                New Appointment
-                            </span>
-                        </CardTitle>
-                        <CardDescription className="text-muted-foreground/80">
-                            Schedule a visit with your doctor.
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="patient" className="text-white/80">Patient Name</Label>
-                            <Input
-                                id="patient"
-                                name="patient"
-                                placeholder="e.g. John Doe"
-                                required
-                                className="bg-black/20 border-white/10"
-                            />
-                            {state.errors?.patient && (
-                                <p className="text-sm font-medium text-destructive">{state.errors.patient[0]}</p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="doctor" className="text-white/80">Doctor Name</Label>
-                            <Input
-                                id="doctor"
-                                name="doctor"
-                                placeholder="e.g. Dr. House"
-                                defaultValue="Dr. Farzan"
-                                required
-                                className="bg-black/20 border-white/10"
-                            />
-                            {state.errors?.doctor && (
-                                <p className="text-sm font-medium text-destructive">{state.errors.doctor[0]}</p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="time" className="text-white/80">Time</Label>
-                            <Input
-                                id="time"
-                                name="time"
-                                type="time"
-                                defaultValue="14:00"
-                                required
-                                className="bg-black/20 border-white/10"
-                            />
-                            {state.errors?.time && (
-                                <p className="text-sm font-medium text-destructive">{state.errors.time[0]}</p>
-                            )}
-                        </div>
-                    </CardContent>
-                    <CardFooter>
-                        <SubmitButton />
-                    </CardFooter>
-                </form>
-            </Card>
+            {/* Pending Requests Section */}
+            <AnimatePresence>
+                {pendingAppointments.length > 0 && (
+                    <Card className="shadow-2xl border-yellow-500/30 bg-yellow-500/10 backdrop-blur-xl">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-xl text-yellow-500">
+                                <Clock className="w-5 h-5" />
+                                Pending Requests ({pendingAppointments.length})
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {pendingAppointments.map((appt) => (
+                                <div key={appt._id} className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-white/5">
+                                    <div className="text-sm">
+                                        <p className="text-white font-medium">{appt.patient}</p>
+                                        <p className="text-white/60 text-xs">Dr. {appt.doctor} @ {appt.time}</p>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="glow"
+                                        disabled={loading}
+                                        onClick={() => handleApprove(appt._id, appt.patient)}
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 text-green-400" />}
+                                    </Button>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
+            </AnimatePresence>
+
+
         </motion.div>
     );
 }

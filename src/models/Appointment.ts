@@ -5,6 +5,7 @@ export interface IAppointment extends Document {
     doctor: string;
     time: string; // Storing as string 24h format "HH:MM", or ISO date string
     description?: string;
+    status: 'pending' | 'scheduled';
     createdAt: Date;
 }
 
@@ -13,6 +14,7 @@ const AppointmentSchema: Schema = new Schema({
     doctor: { type: String, required: true },
     time: { type: String, required: true },
     description: { type: String },
+    status: { type: String, enum: ['pending', 'scheduled'], default: 'pending' },
     createdAt: { type: Date, default: Date.now },
 });
 

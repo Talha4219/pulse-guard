@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Appointment from '@/models/Appointment';
+import { forwardAppointmentToExternalApi } from '@/lib/external-api';
 
 export async function GET() {
     try {
         await connectDB();
-        // Fetch the latest appointment, or all of them. 
-        // For the appointment block, we might just want the upcoming one.
-        // Let's sort by time or creation.
-        const appointments = await Appointment.find({}).sort({ createdAt: -1 }).limit(1);
-
-        return NextResponse.json(appointments[0] || null);
+        // Fetch pending appointments first, or just all of them sorted by status
+        const appointments = await Appointment.find({}).sort({ createdAt: -1 }); // Get all
+        return NextResponse.json(appointments);
     } catch (error) {
         console.error('Failed to fetch appointments:', error);
         return NextResponse.json({ error: 'Failed to fetch appointment' }, { status: 500 });
@@ -27,11 +25,45 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        const newAppointment = await Appointment.create(body);
+        // New requests via API are 'pending' by default
+        const newAppointment = await Appointment.create({
+            ...body,
+            status: 'pending'
+        });
 
         return NextResponse.json(newAppointment, { status: 201 });
     } catch (error) {
-        console.error('Failed to create appointment:', error);
+        console.error('Failed to create appointment request:', error);
         return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 });
+    }
+}
+
+export async function PUT(request: Request) {
+    try {
+        await connectDB();
+        const body = await request.json();
+
+        if (!body.id || !body.status) {
+            return NextResponse.json({ error: 'Missing id or status' }, { status: 400 });
+        }
+
+        const appointment = await Appointment.findById(body.id);
+        if (!appointment) {
+            return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+        }
+
+        appointment.status = body.status;
+        await appointment.save();
+
+        // If status is scheduled, forward to external API
+        if (body.status === 'scheduled') {
+            await forwardAppointmentToExternalApi(appointment);
+        }
+
+        return NextResponse.json(appointment);
+
+    } catch (error) {
+        console.error('Failed to update appointment:', error);
+        return NextResponse.json({ error: 'Failed to update appointment' }, { status: 500 });
     }
 }
