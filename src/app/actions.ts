@@ -6,10 +6,19 @@ const formSchema = z.object({
   alarmTime: z.string().regex(/^\d{2}:\d{2}$/, 'Please enter a valid time (HH:MM).'),
 });
 
+const appointmentSchema = z.object({
+  patient: z.string().min(1, 'Patient name is required'),
+  doctor: z.string().min(1, 'Doctor name is required'),
+  time: z.string().regex(/^\d{2}:\d{2}$/, 'Please enter a valid time (HH:MM).'),
+});
+
 export interface FormState {
   message: string;
   errors?: {
     alarmTime?: string[];
+    patient?: string[];
+    doctor?: string[];
+    time?: string[];
   };
   isError?: boolean;
 }
@@ -26,7 +35,7 @@ export async function handleSetAlarm(prevState: FormState, formData: FormData): 
       isError: true,
     };
   }
-  
+
   const { alarmTime } = validatedFields.data;
 
   try {
@@ -46,6 +55,43 @@ export async function handleSetAlarm(prevState: FormState, formData: FormData): 
     console.error('Set Reminder Error:', error);
     return {
       message: 'An error occurred while setting the reminder.',
+      isError: true,
+    };
+  }
+}
+
+export async function handleCreateAppointment(prevState: FormState, formData: FormData): Promise<FormState> {
+  const validatedFields = appointmentSchema.safeParse({
+    patient: formData.get('patient'),
+    doctor: formData.get('doctor'),
+    time: formData.get('time'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      message: 'Failed to create appointment. Invalid data.',
+      errors: validatedFields.error.flatten().fieldErrors,
+      isError: true,
+    };
+  }
+
+  const { patient, doctor, time } = validatedFields.data;
+
+  try {
+    await fetch(new URL('/api/appointment', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:9002'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patient, doctor, time }),
+    });
+
+    return {
+      message: `Appointment scheduled with ${doctor} at ${time}.`,
+      isError: false,
+    };
+  } catch (error) {
+    console.error('Create Appointment Error:', error);
+    return {
+      message: 'Failed to create appointment.',
       isError: true,
     };
   }
