@@ -72,14 +72,14 @@ export function AlarmForm({ onAlarmSet }: AlarmFormProps) {
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
     >
-      <Card className="shadow-2xl border-white/10 bg-card/40 backdrop-blur-xl">
+      <Card className="shadow-sm border-sidebar-border bg-card">
         <form action={formAction}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-2xl font-light">
-              <div className="p-2 rounded-full bg-primary/20 text-primary animate-pulse">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary">
                 <AlarmClock className="h-6 w-6" />
               </div>
-              <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+              <span>
                 Set Reminder
               </span>
             </CardTitle>
@@ -89,7 +89,7 @@ export function AlarmForm({ onAlarmSet }: AlarmFormProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="alarmTime" className="text-white/80">Reminder Time</Label>
+              <Label htmlFor="alarmTime" className="text-foreground">Reminder Time</Label>
               <div className="group relative">
                 <Input
                   id="alarmTime"
@@ -97,7 +97,7 @@ export function AlarmForm({ onAlarmSet }: AlarmFormProps) {
                   type="time"
                   defaultValue="09:00"
                   required
-                  className="bg-black/20 border-white/10 text-xl py-6 tracking-wide"
+                  className="bg-background border-input text-xl py-6 tracking-wide"
                 />
               </div>
               {state.errors?.alarmTime && (

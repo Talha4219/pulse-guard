@@ -4,51 +4,61 @@
 
 @layer base {
   :root {
-    /* Premium Premium Dark Theme Variables (Default) */
-    --background: 230 84% 5%; /* Very deep blue/black Obsidian */
+    /* Vitality OS - Medical Tech Theme */
+    --background: 222 47% 11%;
+    /* Deep Medical Blue (#0f172a) */
     --foreground: 210 40% 98%;
 
-    --card: 230 84% 6%; /* Slightly lighter than bg */
+    --card: 222 47% 13%;
+    /* Slightly lighter blue */
     --card-foreground: 210 40% 98%;
 
-    --popover: 230 84% 6%;
+    --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 263 80% 60%; /* Electric Violet */
-    --primary-foreground: 210 40% 98%;
+    --primary: 189 94% 43%;
+    /* Medical Teal (#06b6d4) - Trust & Technology */
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 180 100% 50%; /* Neon Cyan for accents */
-    --accent-foreground: 230 84% 5%;
+    --accent: 189 94% 43%;
+    /* Teal Accent */
+    --accent-foreground: 222 47% 11%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 263 80% 60%;
+    --border: 217 33% 20%;
+    --input: 217 33% 17%;
+    --ring: 189 94% 43%;
 
-    --radius: 0.75rem;
-    
-    --chart-1: 263 80% 60%;
-    --chart-2: 180 100% 50%;
-    --chart-3: 300 100% 50%;
-    --chart-4: 210 100% 60%;
-    --chart-5: 45 100% 60%;
-    
-    --sidebar-background: 230 84% 5%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 263 80% 60%;
+    --radius: 0.5rem;
+    /* Cleaner, sharper corners */
+
+    --chart-1: 189 94% 43%;
+    /* Teal */
+    --chart-2: 213 94% 68%;
+    /* Light Blue */
+    --chart-3: 0 84% 60%;
+    /* Red (Alert) */
+    --chart-4: 45 93% 47%;
+    /* Yellow (Warning) */
+    --chart-5: 263 70% 50%;
+    /* Purple */
+
+    --sidebar-background: 222 47% 10%;
+    --sidebar-foreground: 240 5% 96%;
+    --sidebar-primary: 189 94% 43%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 230 84% 10%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 222 47% 15%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 222 47% 15%;
+    --sidebar-ring: 189 94% 43%;
   }
 
   /* We force the dark theme look even without .dark class if desired, 
@@ -56,7 +66,7 @@
      Since we want "Premium Dark" to be the main vibe, :root essentially defines the dark mode.
      We can define a light mode if absolutely necessary, but for now we focus on the dark request. */
   .light {
-     /* Mapping light mode to a "Future White" aesthetic if ever needed, 
+    /* Mapping light mode to a "Future White" aesthetic if ever needed, 
         but for now duplicating dark or keeping standard just in case. 
         Let's keep standard light mode values just so it doesn't break if toggled, 
         but the request is for Premium Dark. */
@@ -86,9 +96,10 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground antialiased;
-    background-image: 
+    background-image:
       radial-gradient(circle at 50% 0%, hsl(var(--primary) / 0.15), transparent 60%),
       radial-gradient(circle at 0% 50%, hsl(var(--accent) / 0.1), transparent 50%);
     background-attachment: fixed;
@@ -99,15 +110,15 @@
   .glass-panel {
     @apply bg-card/60 backdrop-blur-xl border border-white/10 shadow-xl;
   }
-  
+
   .glass-card-hover {
     @apply transition-all duration-300 hover:bg-card/80 hover:shadow-2xl hover:border-primary/50 hover:-translate-y-1;
   }
-  
+
   .text-glow {
     text-shadow: 0 0 20px hsl(var(--primary) / 0.5);
   }
-  
+
   .neon-border {
     box-shadow: 0 0 10px hsl(var(--primary) / 0.3), inset 0 0 5px hsl(var(--primary) / 0.1);
   }

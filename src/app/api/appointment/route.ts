@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Appointment from '@/models/Appointment';
-import { forwardAppointmentToExternalApi } from '@/lib/external-api';
+// import { forwardAppointmentToExternalApi } from '@/lib/external-api'; // Removed mock
 
 export async function GET() {
     try {
@@ -64,8 +64,17 @@ export async function PUT(request: Request) {
         await appointment.save();
 
         // If status is scheduled, forward to external API
+        // If status is scheduled, forward to external API (Destination)
         if (body.status === 'scheduled') {
-            await forwardAppointmentToExternalApi(appointment);
+            try {
+                await fetch(new URL('/api/destination', request.url), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(appointment)
+                });
+            } catch (err) {
+                console.error("Forwarding failed", err);
+            }
         }
 
         return NextResponse.json(appointment);

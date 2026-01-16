@@ -11,7 +11,7 @@ export function Header() {
             <div className="absolute inset-0 blur-lg bg-primary/40 rounded-full animate-pulse" />
             <PulseGuardLogo className="relative text-primary h-8 w-8" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">
             PillPulse
           </h1>
         </div>

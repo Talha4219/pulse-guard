@@ -1,15 +1,17 @@
 'use client';
 
-import { HeartPulse, Waves, Droplets, Gauge } from 'lucide-react';
+import { HeartPulse, Activity, Bell, ShieldCheck } from 'lucide-react';
 import { DataCard } from './data-card';
 import { motion } from 'framer-motion';
 
 interface VitalsMonitorProps {
   heartRate: number | null;
   spo2: number | null;
+  status: string; // 'normal' | 'critical' etc
+  nextAlarm: string | null;
 }
 
-export function VitalsMonitor({ heartRate, spo2 }: VitalsMonitorProps) {
+export function VitalsMonitor({ heartRate, spo2, status, nextAlarm }: VitalsMonitorProps) {
   return (
     <div className="space-y-6">
       <motion.h2
@@ -20,37 +22,37 @@ export function VitalsMonitor({ heartRate, spo2 }: VitalsMonitorProps) {
       >
         Live Vitals
       </motion.h2>
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <DataCard
           title="Heart Rate"
           value={heartRate}
           unit="BPM"
           icon={HeartPulse}
-          description="Beats per minute from your device."
+          description="Real-time heart beat monitoring."
           index={0}
         />
         <DataCard
-          title="Oxygen Saturation"
+          title="SpO2 Level"
           value={spo2}
-          unit="SpO2 %"
-          icon={Waves}
-          description="Blood oxygen level."
+          unit="%"
+          icon={Activity}
+          description="Blood oxygen saturation."
           index={1}
         />
         <DataCard
-          title="Blood Sugar"
-          value={null}
-          unit="mg/dL"
-          icon={Droplets}
-          description="Coming soon."
+          title="Overall Status"
+          value={status === 'critical' ? 'CRITICAL' : status === 'elevated' ? 'WARNING' : 'NORMAL'}
+          unit=""
+          icon={ShieldCheck}
+          description="AI-driven health assessment."
           index={2}
         />
         <DataCard
-          title="Blood Pressure"
-          value={null}
-          unit="mmHg"
-          icon={Gauge}
-          description="Coming soon."
+          title="Next Alarm"
+          value={nextAlarm || "No Alarm"}
+          unit=""
+          icon={Bell}
+          description="Upcoming medication reminder."
           index={3}
         />
       </div>

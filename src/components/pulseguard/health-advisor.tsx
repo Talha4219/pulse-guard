@@ -67,17 +67,17 @@ export function HealthAdvisor({ suggestions, isLoading }: HealthAdvisorProps) {
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <Card className="glass-panel border-primary/20 bg-gradient-to-br from-card/50 to-primary/5">
+      <Card className="shadow-sm border-sidebar-border bg-card">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <div className="p-2 rounded-full bg-primary/10 ring-1 ring-primary/30">
-              <Lightbulb className="h-5 w-5 text-primary" />
+          <CardTitle className="flex items-center gap-2 text-xl font-semibold text-foreground">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary">
+              <Lightbulb className="h-5 w-5" />
             </div>
-            Health Advisor
+            Medical Report
           </CardTitle>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground bg-white/5 px-3 py-1 rounded-full w-fit">
+          <div className="flex items-center gap-2 text-sm text-foreground bg-secondary/50 px-3 py-1 rounded-full w-fit mt-2">
             {statusIcons[suggestions.overallStatus] || <Activity className="h-5 w-5" />}
-            <span className="capitalize font-medium text-white/90">Overall Status: {suggestions.overallStatus}</span>
+            <span className="capitalize font-medium">Analysis: {suggestions.overallStatus}</span>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
