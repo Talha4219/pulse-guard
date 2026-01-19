@@ -3,9 +3,30 @@ import connectDB from '@/lib/db';
 import Appointment from '@/models/Appointment';
 // import { forwardAppointmentToExternalApi } from '@/lib/external-api'; // Removed mock
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         await connectDB();
+        const { searchParams } = new URL(request.url);
+        const key = searchParams.get('key');
+        const id = searchParams.get('id'); // Keep id just in case
+
+        const searchKey = key || id;
+
+        if (searchKey) {
+            // Try finding by custom 'key' first
+            const appointment = await Appointment.findOne({ key: searchKey });
+            if (!appointment) {
+                // Fallback: try finding by internal _id just in case
+                try {
+                    const byInternal = await Appointment.findById(searchKey);
+                    if (byInternal) return NextResponse.json(byInternal);
+                } catch (e) { }
+
+                return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
+            }
+            return NextResponse.json(appointment);
+        }
+
         // Fetch pending appointments first, or just all of them sorted by status
         const appointments = await Appointment.find({}).sort({ createdAt: -1 }); // Get all
         return NextResponse.json(appointments);
@@ -19,15 +40,17 @@ export async function POST(request: Request) {
     try {
         await connectDB();
         const body = await request.json();
+        console.log('--- POST /api/appointment Body:', body);
 
         // Validate body
         if (!body.patient || !body.doctor) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // New requests via API are 'pending' by default
         const newAppointment = await Appointment.create({
-            ...body,
+            key: body.key, // Save custom Key if provided
+            patient: body.patient,
+            doctor: body.doctor,
             status: 'pending'
         });
 

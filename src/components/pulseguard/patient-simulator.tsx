@@ -21,18 +21,49 @@ export function PatientSimulator() {
     const simulateAppointmentRequest = async () => {
         setLoading('appt');
         try {
+            // User requested ID "1234" for the example
+            const customKey = "1234";
+
             const res = await fetch('/api/appointment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    patient: patientName,
-                    doctor: 'Dr. Smith', // Assuming this doctor
-                    status: 'pending' // Pending approval
+                    key: customKey,
+                    patient: "Farzan", // User specific name
+                    doctor: "Talha Shams", // User specific name
+                    status: 'pending'
                 })
             });
 
             if (res.ok) {
-                toast({ title: 'Signal Sent', description: 'Patient requested an appointment.' });
+                const data = await res.json();
+                const trackingKey = customKey;
+
+                toast({ title: 'Request Sent', description: `Key: ${trackingKey}. Waiting for confirmation...` });
+
+                // Simulate ESP32 Polling logic
+                const pollInterval = setInterval(async () => {
+                    try {
+                        const checkRes = await fetch(`/api/appointment?key=${trackingKey}`);
+                        if (checkRes.ok) {
+                            const checkData = await checkRes.json();
+                            if (checkData.status === 'scheduled') {
+                                toast({
+                                    title: 'APPOINTMENT CONFIRMED!',
+                                    description: `Doctor scheduled for: ${checkData.time}`,
+                                    className: "bg-green-500 text-white"
+                                });
+                                clearInterval(pollInterval);
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Polling error", e);
+                    }
+                }, 3000); // Check every 3 seconds
+
+                // Stop polling after 60 seconds to avoid infinite loops in demo
+                setTimeout(() => clearInterval(pollInterval), 60000);
+
             } else {
                 toast({ title: 'Error', description: 'Failed to send signal.', variant: 'destructive' });
             }
