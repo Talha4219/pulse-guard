@@ -22,8 +22,7 @@ export async function GET(request: Request) {
             status: 'success',
             message: 'Data found at destination',
             time: appointment.time || 'pending',
-            appointment_status: appointment.status,
-            data: appointment
+            appointment_status: appointment.status
         });
 
     } catch (error) {
