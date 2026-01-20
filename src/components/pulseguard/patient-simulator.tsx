@@ -78,20 +78,33 @@ export function PatientSimulator() {
         setLoading(type);
         try {
             // Construct payload based on type
-            const payload = type === 'normal'
-                ? { heartRate: 75, pulse: 98, temperature: 36.5, humidity: 45 }
-                : { heartRate: 140, pulse: 88, temperature: 38.2, humidity: 55 }; // Fever/High HR
+            // Construct payloads
+            const vitalsPayload = type === 'normal'
+                ? { heartRate: 75, pulse: 98 }
+                : { heartRate: 140, pulse: 88 };
 
-            const res = await fetch('/api/vitals', {
+            const dhtPayload = type === 'normal'
+                ? { temperature: 36.5, humidity: 45 }
+                : { temperature: 38.2, humidity: 55 };
+
+            // Send Vitals (Heart/Pulse)
+            const vitalsRes = await fetch('/api/vitals', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(vitalsPayload)
             });
 
-            if (res.ok) {
+            // Send Environment (Temp/Humidity)
+            const dhtRes = await fetch('/api/dht', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(dhtPayload)
+            });
+
+            if (vitalsRes.ok && dhtRes.ok) {
                 toast({
-                    title: type === 'emergency' ? 'EMERGENCY SIGNAL SENT' : 'Vitals Updated',
-                    description: 'ESP32 sent new sensor data.',
+                    title: type === 'emergency' ? 'EMERGENCY SIGNAL SENT' : 'Vitals & Environment Updated',
+                    description: 'ESP32 sent separate sensor data streams.',
                     variant: type === 'emergency' ? 'destructive' : 'default'
                 });
             }
@@ -168,7 +181,12 @@ export function PatientSimulator() {
                                     await fetch('/api/vitals', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ heartRate: 34, pulse: 22, temperature: 35.0, humidity: 40 })
+                                        body: JSON.stringify({ heartRate: 34, pulse: 22 })
+                                    });
+                                    await fetch('/api/dht', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ temperature: 35.0, humidity: 40 })
                                     });
                                     toast({ title: 'Custom Data Sent', description: 'HR: 34, Pulse: 22, Temp: 35' });
                                 } catch (e) { console.error(e); }
