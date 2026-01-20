@@ -8,6 +8,8 @@ interface Vitals {
 interface Emergency {
   active: boolean;
   message: string;
+  patient?: string;
+  address?: string;
   timestamp: string | null;
 }
 
@@ -28,7 +30,7 @@ type DoctorStatus = 'idle' | 'coming';
 // This is not safe for concurrent requests or multiple server instances, but fine for this demo.
 let store = {
   latestVitals: { heartRate: 0, pulse: 0, temperature: 0, humidity: 0 } as Vitals,
-  emergency: { active: false, message: '', timestamp: null } as Emergency,
+  emergency: { active: false, message: '', patient: '', address: '', timestamp: null } as Emergency,
   alarm: { time: null } as Alarm,
   alarmStatus: 'idle' as AlarmStatus,
   doctorStatus: 'idle' as DoctorStatus,

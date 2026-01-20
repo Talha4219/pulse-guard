@@ -140,7 +140,11 @@ export function PatientSimulator() {
                                     await fetch('/api/emergency', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ status: 'active', message: 'SOS: FALL DETECTED' })
+                                        body: JSON.stringify({
+                                            status: true,
+                                            patient: 'John Doe',
+                                            address: '123 Main St, New York, NY'
+                                        })
                                     });
                                     toast({ title: 'SOS SENT', description: 'Emergency API triggered', variant: 'destructive' });
                                 } catch (e) { console.error(e); }

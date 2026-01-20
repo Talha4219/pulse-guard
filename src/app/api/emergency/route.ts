@@ -6,11 +6,13 @@ export async function POST(request: Request) {
         const body = await request.json();
         // Body format: { "status": "active" | "cleared", "message": "Fall Detected" }
 
-        const isActive = body.status === 'active';
+        const isActive = body.status === 'active' || body.status === true;
 
         updateEmergency({
             active: isActive,
             message: body.message || (isActive ? 'Emergency Alert' : ''),
+            patient: body.patient || '',
+            address: body.address || '',
             timestamp: isActive ? new Date().toISOString() : null
         });
 
