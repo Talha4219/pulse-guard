@@ -79,8 +79,8 @@ export function PatientSimulator() {
         try {
             // Construct payload based on type
             const payload = type === 'normal'
-                ? { heartRate: 75, pulse: 98 } // Pulse mapped to SpO2 in API
-                : { heartRate: 140, pulse: 88 }; // High HR, Lower SpO2
+                ? { heartRate: 75, pulse: 98, temperature: 36.5, humidity: 45 }
+                : { heartRate: 140, pulse: 88, temperature: 38.2, humidity: 55 }; // Fever/High HR
 
             const res = await fetch('/api/vitals', {
                 method: 'POST',
@@ -134,14 +134,25 @@ export function PatientSimulator() {
                         <Button
                             variant="outline"
                             className="h-auto py-2 flex flex-col gap-1 items-start border-red-900/20 hover:bg-red-900/10 hover:text-red-500"
-                            onClick={() => simulateVitalsUpdate('emergency')}
+                            onClick={async () => {
+                                setLoading('emergency');
+                                try {
+                                    await fetch('/api/emergency', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ status: 'active', message: 'SOS: FALL DETECTED' })
+                                    });
+                                    toast({ title: 'SOS SENT', description: 'Emergency API triggered', variant: 'destructive' });
+                                } catch (e) { console.error(e); }
+                                setLoading(null);
+                            }}
                             disabled={!!loading}
                         >
                             <span className="flex items-center gap-2 text-red-500 font-semibold">
                                 {loading === 'emergency' ? <Loader2 className="h-3 w-3 animate-spin" /> : <AlertTriangle className="h-3 w-3" />}
                                 Trigger SOS
                             </span>
-                            <span className="text-xs text-muted-foreground sr-only sm:not-sr-only">Simulate High HR</span>
+                            <span className="text-xs text-muted-foreground sr-only sm:not-sr-only">Simulate Fall</span>
                         </Button>
 
                         <Button
@@ -153,9 +164,9 @@ export function PatientSimulator() {
                                     await fetch('/api/vitals', {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ heartRate: 34, pulse: 22 })
+                                        body: JSON.stringify({ heartRate: 34, pulse: 22, temperature: 35.0, humidity: 40 })
                                     });
-                                    toast({ title: 'Custom Data Sent', description: 'HR: 34, Pulse: 22' });
+                                    toast({ title: 'Custom Data Sent', description: 'HR: 34, Pulse: 22, Temp: 35' });
                                 } catch (e) { console.error(e); }
                                 setLoading(null);
                             }}
@@ -180,6 +191,6 @@ export function PatientSimulator() {
                 </div>
 
             </CardContent>
-        </Card>
+        </Card >
     );
 }
