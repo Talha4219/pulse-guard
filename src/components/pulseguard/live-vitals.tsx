@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Activity, Heart, RefreshCw } from 'lucide-react';
+import { Activity, Heart, RefreshCw, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export function LiveVitals() {
