@@ -21,12 +21,13 @@ export async function POST(request: Request) {
     //   return NextResponse.json({ error: 'Invalid data format' }, { status: 400 });
     // }
 
-    updateVitals({
-      heartRate: heartRate || 0,
-      pulse: pulse || 0,
-      temperature: temperature || 0,
-      humidity: humidity || 0
-    });
+    const updateData: any = {};
+    if (heartRate !== undefined) updateData.heartRate = heartRate;
+    if (pulse !== undefined) updateData.pulse = pulse;
+    if (temperature !== undefined) updateData.temperature = temperature;
+    if (humidity !== undefined) updateData.humidity = humidity;
+
+    updateVitals(updateData);
     console.log('Received vitals from ESP32:', { heartRate, pulse, temperature, humidity });
 
     return NextResponse.json({ message: 'Data received successfully' }, { status: 200 });

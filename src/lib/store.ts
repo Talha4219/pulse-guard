@@ -40,14 +40,26 @@ let store = {
 
 export const getLatestVitals = () => store.latestVitals;
 export const getHistoricalHeartRates = () => store.historicalHeartRates;
+
+let vitalsTimer: NodeJS.Timeout | null = null;
+
 export const updateVitals = (data: Partial<Vitals>) => {
   store.latestVitals = { ...store.latestVitals, ...data };
-  if (data.heartRate) {
-    store.historicalHeartRates.push(data.heartRate);
-    // Keep the last 50 readings
-    if (store.historicalHeartRates.length > 50) {
-      store.historicalHeartRates.shift();
+
+  // Logic for Heart Rate / Pulse (auto-reset after 30s)
+  if (data.heartRate !== undefined || data.pulse !== undefined) {
+    if (data.heartRate) {
+      store.historicalHeartRates.push(data.heartRate);
+      if (store.historicalHeartRates.length > 50) store.historicalHeartRates.shift();
     }
+
+    // Reset timer
+    if (vitalsTimer) clearTimeout(vitalsTimer);
+    vitalsTimer = setTimeout(() => {
+      store.latestVitals.heartRate = 0;
+      store.latestVitals.pulse = 0;
+      console.log('Vitals reset due to inactivity (30s timeout)');
+    }, 30000);
   }
 };
 
