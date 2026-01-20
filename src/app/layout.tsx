@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SiteHeader } from "@/components/layout/site-header"
 
 export const metadata: Metadata = {
-  title: 'PillPulse',
+  title: 'CliniMind',
   description: 'Your smart medicine reminder.',
 };
 
